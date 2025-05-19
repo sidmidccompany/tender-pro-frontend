@@ -115,9 +115,6 @@
 
 // export default App;
 
-
-
-
 // src/App.js
 import React, { useState, useEffect } from "react";
 import {
@@ -145,6 +142,7 @@ import LoginPage from "./components/LoginPage";
 import OCRProcessing from "./components/OCRProcessing";
 import PredictiveAnalysis from "./components/PredictiveAnalysiss";
 import NotificationsPanel from "./components/NotificationsPanel";
+import TenderDetails from "./components/TenderDetail";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -153,8 +151,10 @@ function App() {
 
   useEffect(() => {
     // Check token presence on app load to persist login
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    const storedUser =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     if (token) {
       setIsAuthenticated(true);
       if (storedUser) setUser(JSON.parse(storedUser));
@@ -224,12 +224,21 @@ function App() {
               <Route path="/companies" element={<Companies />} />
               <Route path="/departments" element={<Departments />} />
               <Route path="/users-roles" element={<UsersAndRoles />} />
-              <Route path="/document-management" element={<DocumentManagement />} />
+              <Route
+                path="/document-management"
+                element={<DocumentManagement />}
+              />
               <Route path="/settings" element={<SettingsApp />} />
               <Route path="/ai-chat" element={<AIChat />} />
               <Route path="/ocr-processing" element={<OCRProcessing />} />
-              <Route path="/predictive-analysis" element={<PredictiveAnalysis />} />
+              <Route
+                path="/predictive-analysis"
+                element={<PredictiveAnalysis />}
+              />
               <Route path="/notifications" element={<NotificationsPanel />} />
+              {/* <Route path="/tender/:id" component={TenderDetail} /> */}
+              {/* <Route path="/tender/:id" element={<TenderDetails tenders={tenders} />} /> */}
+              <Route path="/tender/:jobId" element={<TenderDetails />} />
             </Routes>
           </div>
         </div>
@@ -239,4 +248,3 @@ function App() {
 }
 
 export default App;
-

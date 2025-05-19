@@ -1,124 +1,129 @@
 import React, { useState } from 'react';
-import './CSS/AllCss'; 
+import './CSS/AllCss';
 
 const OCRProcessing = () => {
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [showResults, setShowResults] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [status, setStatus] = useState('');
-  
-    const handleFileUpload = (files) => {
-      if (files.length > 0) {
-        setIsProcessing(true);
-        setShowResults(false);
-        
-        // Simulate OCR processing
-        const stages = [
-          'Initializing OCR engine...',
-          'Preprocessing image...',
-          'Detecting text regions...',
-          'Extracting text...',
-          'Analyzing document structure...',
-          'Identifying key fields...',
-          'Validating extracted data...',
-          'Finalizing results...'
-        ];
-        
-        let currentStage = 0;
-        const interval = setInterval(() => {
-          if (currentStage < stages.length) {
-            setProgress((currentStage + 1) * 12.5);
-            setStatus(stages[currentStage]);
-            currentStage++;
-          } else {
-            clearInterval(interval);
-            setIsProcessing(false);
-            setShowResults(true);
-            setProgress(100);
-          }
-        }, 500);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  const handleFileUpload = async (files) => {
+    if (files.length === 0) return;
+
+    setIsProcessing(true);
+    setShowResults(false);
+    setUploadSuccess(false);
+
+    const formData = new FormData();
+    Array.from(files).forEach(file => formData.append('file', file));
+
+    try {
+      const resp = await fetch(
+        'https://sidmidccompany-ocr.hf.space/ocr/upload',
+        { method: 'POST', body: formData }
+      );
+      const data = await resp.json();
+
+      if (data?.job_id) {
+        // read existing array or start new
+        const prev = JSON.parse(localStorage.getItem('uploadedJobIds') || '[]');
+        localStorage.setItem(
+          'uploadedJobIds',
+          JSON.stringify([data.job_id, ...prev])
+        );
+        setUploadSuccess(true);
       }
-    };
-  
-    return (
-      <div className="page-content">
-        <h1>AI-Powered OCR Document Processing</h1>
-        
-        <div className="form-section">
-          <div className="form-header">Upload Document for OCR</div>
-          
-          {!isProcessing && !showResults && (
-            <div 
-              className="ocr-upload-area"
-              onClick={() => document.getElementById('ocrFileInput').click()}
-              onDrop={(e) => {
-                e.preventDefault();
-                handleFileUpload(e.dataTransfer.files);
-              }}
-              onDragOver={(e) => e.preventDefault()}
-            >
-              <div className="ocr-upload-icon">📄</div>
-              <h3 className="ocr-upload-text">Drop files here or click to upload</h3>
-              <p className="ocr-upload-subtext">Supported formats: PDF, JPG, PNG, TIFF (Max 10MB)</p>
-              <input 
-                type="file" 
-                id="ocrFileInput" 
-                style={{ display: 'none' }} 
-                accept=".pdf,.jpg,.jpeg,.png,.tiff" 
-                onChange={(e) => handleFileUpload(e.target.files)}
-                multiple
-              />
-            </div>
-          )}
-          
-          {isProcessing && (
-            <div className="ocr-processing">
-              <div className="spinner"></div>
-              <p>Processing document with AI...</p>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-              </div>
-              <p>{status}</p>
-            </div>
-          )}
-          
-          {showResults && (
-            <div id="ocrResults">
-              <h3>Extracted Data</h3>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Tender Number</label>
-                  <input type="text" className="form-input" defaultValue="TND-2024-001" />
-                  <span className="ai-confidence">AI Confidence: 95%</span>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Department</label>
-                  <input type="text" className="form-input" defaultValue="Ministry of Finance" />
-                  <span className="ai-confidence">AI Confidence: 88%</span>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Tender Value</label>
-                  <input type="text" className="form-input" defaultValue="₹45,00,000" />
-                  <span className="ai-confidence">AI Confidence: 92%</span>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Deadline</label>
-                  <input type="text" className="form-input" defaultValue="2024-12-15 17:00" />
-                  <span className="ai-confidence">AI Confidence: 90%</span>
-                </div>
-              </div>
-              <div style={{ marginTop: '20px' }}>
-                <button className="btn btn-primary">Save Extracted Data</button>
-                <button className="btn btn-secondary" onClick={() => {
-                  setShowResults(false);
-                  setProgress(0);
-                }}>Process Another Document</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+
+      // simulate progress
+      const stages = [
+        'Initializing OCR engine…',
+        'Preprocessing image…',
+        'Detecting text regions…',
+        'Extracting text…',
+        'Analyzing document structure…',
+        'Identifying key fields…',
+        'Validating extracted data…',
+        'Finalizing results…',
+      ];
+      let i = 0;
+      const timer = setInterval(() => {
+        if (i < stages.length) {
+          setProgress(((i + 1) / stages.length) * 100);
+          setStatus(stages[i]);
+          i += 1;
+        } else {
+          clearInterval(timer);
+          setIsProcessing(false);
+          setShowResults(true);
+        }
+      }, 400);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setIsProcessing(false);
+    }
   };
 
-  export default OCRProcessing;
+  return (
+    <div className="page-content">
+      <h1>AI-Powered OCR Document Processing</h1>
+
+      <div className="form-section">
+        <div className="form-header">Upload Document for OCR</div>
+
+        {!isProcessing && !showResults && (
+          <div
+            className="ocr-upload-area"
+            onClick={() => document.getElementById('ocrFileInput').click()}
+            onDrop={e => {
+              e.preventDefault();
+              handleFileUpload(e.dataTransfer.files);
+            }}
+            onDragOver={e => e.preventDefault()}
+          >
+            <div className="ocr-upload-icon">📄</div>
+            <h3 className="ocr-upload-text">
+              Drop files here or click to upload
+            </h3>
+            <p className="ocr-upload-subtext">
+              Supported formats: PDF, JPG, PNG, TIFF (Max 10MB)
+            </p>
+            <input
+              type="file"
+              id="ocrFileInput"
+              style={{ display: 'none' }}
+              accept=".pdf,.jpg,.jpeg,.png,.tiff"
+              multiple
+              onChange={e => handleFileUpload(e.target.files)}
+            />
+          </div>
+        )}
+
+        {isProcessing && (
+          <div className="ocr-processing">
+            <div className="spinner" />
+            <p>Processing document with AI…</p>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p>{status}</p>
+          </div>
+        )}
+
+        {showResults && uploadSuccess && (
+          <div className="ocr-result-message">
+            <p style={{ color: 'green', fontWeight: 'bold' }}>
+              File uploaded successfully!
+            </p>
+            <p>You can now view it in the Tender Management section.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default OCRProcessing;
